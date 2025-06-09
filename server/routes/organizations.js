@@ -1,10 +1,14 @@
 const express = require('express');
 const { body, validationResult } = require('express-validator');
 const { PrismaClient } = require('@prisma/client');
-const { authorize, checkResourceAccess } = require('../middleware/auth');
+const { authenticate, authorize, checkResourceAccess } = require('../middleware/auth');
+const { validateCUID, validateOptionalCUID } = require('../utils/validation');
 
 const router = express.Router();
 const prisma = new PrismaClient();
+
+// Apply authentication middleware to all routes
+router.use(authenticate);
 
 // GET /api/organizations - List organizations
 router.get('/', async (req, res) => {
@@ -148,7 +152,7 @@ router.post('/',
   [
     body('name').trim().isLength({ min: 1 }).withMessage('Organization name is required'),
     body('description').optional().trim(),
-    body('managerId').isUUID().withMessage('Valid manager ID is required')
+    validateCUID('managerId', 'Valid manager ID is required')
   ],
   async (req, res) => {
     try {
@@ -221,7 +225,7 @@ router.put('/:id',
   [
     body('name').optional().trim().isLength({ min: 1 }),
     body('description').optional().trim(),
-    body('managerId').optional().isUUID(),
+    validateOptionalCUID('managerId', 'Valid manager ID required if provided'),
     body('isActive').optional().isBoolean()
   ],
   async (req, res) => {
@@ -327,7 +331,7 @@ router.delete('/:id', authorize(['SUPER_ADMIN', 'SYSTEM_USER']), async (req, res
 router.post('/:id/members',
   authorize(['SUPER_ADMIN', 'SYSTEM_USER', 'ORGANIZATION_MANAGER']),
   [
-    body('userId').isUUID().withMessage('Valid user ID is required')
+    validateCUID('userId', 'Valid user ID is required')
   ],
   async (req, res) => {
     try {

@@ -34,11 +34,12 @@ export default function UsersPage() {
     firstName: '',
     lastName: '',
     email: '',
-    role: 'reviewer',
+    role: 'REVIEWER',
     password: ''
   });
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [submitting, setSubmitting] = useState(false);
   const itemsPerPage = 10;
 
   useEffect(() => {
@@ -60,8 +61,8 @@ export default function UsersPage() {
       };
       
       const response = await usersAPI.getAll(params);
-      setUsers(response.data.users || []);
-      setTotalPages(Math.ceil((response.data.total || 0) / itemsPerPage));
+      setUsers(response.data.data.users || []);
+      setTotalPages(Math.ceil((response.data.data.pagination.total || 0) / itemsPerPage));
     } catch (error) {
       toast.error('Failed to load users');
       console.error('Error loading users:', error);
@@ -72,30 +73,46 @@ export default function UsersPage() {
 
   const handleCreateUser = async () => {
     try {
-      await usersAPI.create(formData);
-      toast.success('User created successfully');
-      setShowModal(false);
-      resetForm();
-      loadUsers();
+      setSubmitting(true);
+      const response = await usersAPI.create(formData);
+      if (response.data.success) {
+        toast.success('User created successfully');
+        setShowModal(false);
+        resetForm();
+        loadUsers();
+      } else {
+        toast.error(response.data.message || 'Failed to create user');
+      }
     } catch (error) {
+      console.error('Create user error:', error);
       toast.error(error.response?.data?.message || 'Failed to create user');
+    } finally {
+      setSubmitting(false);
     }
   };
 
   const handleUpdateUser = async () => {
     try {
+      setSubmitting(true);
       const updateData = { ...formData };
       if (!updateData.password) {
         delete updateData.password;
       }
       
-      await usersAPI.update(selectedUser.id, updateData);
-      toast.success('User updated successfully');
-      setShowModal(false);
-      resetForm();
-      loadUsers();
+      const response = await usersAPI.update(selectedUser.id, updateData);
+      if (response.data.success) {
+        toast.success('User updated successfully');
+        setShowModal(false);
+        resetForm();
+        loadUsers();
+      } else {
+        toast.error(response.data.message || 'Failed to update user');
+      }
     } catch (error) {
+      console.error('Update user error:', error);
       toast.error(error.response?.data?.message || 'Failed to update user');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -116,7 +133,7 @@ export default function UsersPage() {
       firstName: '',
       lastName: '',
       email: '',
-      role: 'reviewer',
+      role: 'REVIEWER',
       password: ''
     });
     setSelectedUser(null);
@@ -130,7 +147,7 @@ export default function UsersPage() {
         firstName: userData.firstName || '',
         lastName: userData.lastName || '',
         email: userData.email || '',
-        role: userData.role || 'reviewer',
+        role: userData.role || 'REVIEWER',
         password: ''
       });
     } else {
@@ -141,16 +158,16 @@ export default function UsersPage() {
 
   const getRoleColor = (role) => {
     switch (role) {
-      case 'super-admin': return 'bg-red-100 text-red-800';
-      case 'system-user': return 'bg-blue-100 text-blue-800';
-      case 'organization-manager': return 'bg-green-100 text-green-800';
-      case 'reviewer': return 'bg-yellow-100 text-yellow-800';
+      case 'SUPER_ADMIN': return 'bg-red-100 text-red-800';
+      case 'SYSTEM_USER': return 'bg-blue-100 text-blue-800';
+      case 'ORGANIZATION_MANAGER': return 'bg-green-100 text-green-800';
+      case 'REVIEWER': return 'bg-yellow-100 text-yellow-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
 
   const formatRole = (role) => {
-    return role.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+    return role.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ');
   };
 
   const formatDate = (dateString) => {
@@ -219,10 +236,10 @@ export default function UsersPage() {
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
               >
                 <option value="all">All Roles</option>
-                <option value="super-admin">Super Admin</option>
-                <option value="system-user">System User</option>
-                <option value="organization-manager">Organization Manager</option>
-                <option value="reviewer">Reviewer</option>
+                <option value="SUPER_ADMIN">Super Admin</option>
+                <option value="SYSTEM_USER">System User</option>
+                <option value="ORGANIZATION_MANAGER">Organization Manager</option>
+                <option value="REVIEWER">Reviewer</option>
               </select>
             </div>
           </div>
@@ -287,11 +304,11 @@ export default function UsersPage() {
                       </td>
                       <td className="px-6 py-4">
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          userItem.isEmailVerified 
+                          userItem.emailVerified 
                             ? 'bg-green-100 text-green-800' 
                             : 'bg-yellow-100 text-yellow-800'
                         }`}>
-                          {userItem.isEmailVerified ? 'Verified' : 'Pending'}
+                          {userItem.emailVerified ? 'Verified' : 'Pending'}
                         </span>
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-500">
@@ -360,152 +377,149 @@ export default function UsersPage() {
 
       {/* Modal */}
       {showModal && (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
-          <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-            <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onClick={() => setShowModal(false)}></div>
-            
-            <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-              <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-medium text-gray-900">
-                    {modalType === 'create' ? 'Create User' : modalType === 'edit' ? 'Edit User' : 'User Details'}
-                  </h3>
-                  <button
-                    onClick={() => setShowModal(false)}
-                    className="text-gray-400 hover:text-gray-600"
-                  >
-                    <X className="w-6 h-6" />
-                  </button>
-                </div>
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div className="mt-3">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-medium text-gray-900">
+                  {modalType === 'create' ? 'Create User' : modalType === 'edit' ? 'Edit User' : 'User Details'}
+                </h3>
+                <button
+                  onClick={() => setShowModal(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
 
-                {modalType === 'view' ? (
-                  <div className="space-y-4">
-                    <div className="text-center">
-                      <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-xl mx-auto mb-4">
-                        {selectedUser?.firstName?.[0]}{selectedUser?.lastName?.[0]}
-                      </div>
-                      <h4 className="text-xl font-semibold">
-                        {selectedUser?.firstName} {selectedUser?.lastName}
-                      </h4>
-                      <p className="text-gray-600">{selectedUser?.email}</p>
+              {modalType === 'view' ? (
+                <div className="space-y-4">
+                  <div className="text-center">
+                    <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-xl mx-auto mb-4">
+                      {selectedUser?.firstName?.[0]}{selectedUser?.lastName?.[0]}
                     </div>
-                    <div className="space-y-3">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700">Role</label>
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getRoleColor(selectedUser?.role)}`}>
-                          {formatRole(selectedUser?.role)}
-                        </span>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700">Email Status</label>
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          selectedUser?.isEmailVerified 
-                            ? 'bg-green-100 text-green-800' 
-                            : 'bg-yellow-100 text-yellow-800'
-                        }`}>
-                          {selectedUser?.isEmailVerified ? 'Verified' : 'Pending Verification'}
-                        </span>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700">Joined</label>
-                        <p className="text-sm text-gray-600">{formatDate(selectedUser?.createdAt)}</p>
-                      </div>
-                    </div>
+                    <h4 className="text-xl font-semibold">
+                      {selectedUser?.firstName} {selectedUser?.lastName}
+                    </h4>
+                    <p className="text-gray-600">{selectedUser?.email}</p>
                   </div>
-                ) : (
-                  <form onSubmit={(e) => {
-                    e.preventDefault();
-                    modalType === 'create' ? handleCreateUser() : handleUpdateUser();
-                  }} className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label htmlFor="firstName" className="block text-sm font-medium text-gray-700">
-                          First Name
-                        </label>
-                        <input
-                          type="text"
-                          id="firstName"
-                          value={formData.firstName}
-                          onChange={(e) => setFormData({...formData, firstName: e.target.value})}
-                          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                          required
-                        />
-                      </div>
-                      <div>
-                        <label htmlFor="lastName" className="block text-sm font-medium text-gray-700">
-                          Last Name
-                        </label>
-                        <input
-                          type="text"
-                          id="lastName"
-                          value={formData.lastName}
-                          onChange={(e) => setFormData({...formData, lastName: e.target.value})}
-                          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                          required
-                        />
-                      </div>
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Role</label>
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getRoleColor(selectedUser?.role)}`}>
+                        {formatRole(selectedUser?.role)}
+                      </span>
                     </div>
                     <div>
-                      <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                        Email
+                      <label className="block text-sm font-medium text-gray-700">Email Status</label>
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        selectedUser?.emailVerified 
+                          ? 'bg-green-100 text-green-800' 
+                          : 'bg-yellow-100 text-yellow-800'
+                      }`}>
+                        {selectedUser?.emailVerified ? 'Verified' : 'Pending Verification'}
+                      </span>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Joined</label>
+                      <p className="text-sm text-gray-600">{formatDate(selectedUser?.createdAt)}</p>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <form onSubmit={(e) => {
+                  e.preventDefault();
+                  modalType === 'create' ? handleCreateUser() : handleUpdateUser();
+                }} className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label htmlFor="firstName" className="block text-sm font-medium text-gray-700">
+                        First Name
                       </label>
                       <input
-                        type="email"
-                        id="email"
-                        value={formData.email}
-                        onChange={(e) => setFormData({...formData, email: e.target.value})}
+                        type="text"
+                        id="firstName"
+                        value={formData.firstName}
+                        onChange={(e) => setFormData({...formData, firstName: e.target.value})}
                         className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                         required
                       />
                     </div>
                     <div>
-                      <label htmlFor="role" className="block text-sm font-medium text-gray-700">
-                        Role
-                      </label>
-                      <select
-                        id="role"
-                        value={formData.role}
-                        onChange={(e) => setFormData({...formData, role: e.target.value})}
-                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                      >
-                        <option value="reviewer">Reviewer</option>
-                        <option value="organization-manager">Organization Manager</option>
-                        <option value="system-user">System User</option>
-                        <option value="super-admin">Super Admin</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                        Password {modalType === 'edit' && '(leave empty to keep current)'}
+                      <label htmlFor="lastName" className="block text-sm font-medium text-gray-700">
+                        Last Name
                       </label>
                       <input
-                        type="password"
-                        id="password"
-                        value={formData.password}
-                        onChange={(e) => setFormData({...formData, password: e.target.value})}
+                        type="text"
+                        id="lastName"
+                        value={formData.lastName}
+                        onChange={(e) => setFormData({...formData, lastName: e.target.value})}
                         className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                        required={modalType === 'create'}
-                        minLength="6"
+                        required
                       />
                     </div>
-                    <div className="flex justify-end space-x-3 pt-4">
-                      <button
-                        type="button"
-                        onClick={() => setShowModal(false)}
-                        className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        type="submit"
-                        className="px-4 py-2 bg-indigo-600 text-white rounded-md text-sm font-medium hover:bg-indigo-700"
-                      >
-                        {modalType === 'create' ? 'Create User' : 'Update User'}
-                      </button>
-                    </div>
-                  </form>
-                )}
-              </div>
+                  </div>
+                  <div>
+                    <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                      Email
+                    </label>
+                    <input
+                      type="email"
+                      id="email"
+                      value={formData.email}
+                      onChange={(e) => setFormData({...formData, email: e.target.value})}
+                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="role" className="block text-sm font-medium text-gray-700">
+                      Role
+                    </label>
+                    <select
+                      id="role"
+                      value={formData.role}
+                      onChange={(e) => setFormData({...formData, role: e.target.value})}
+                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                    >
+                      <option value="REVIEWER">Reviewer</option>
+                      <option value="ORGANIZATION_MANAGER">Organization Manager</option>
+                      <option value="SYSTEM_USER">System User</option>
+                      <option value="SUPER_ADMIN">Super Admin</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                      Password {modalType === 'edit' && '(leave empty to keep current)'}
+                    </label>
+                    <input
+                      type="password"
+                      id="password"
+                      value={formData.password}
+                      onChange={(e) => setFormData({...formData, password: e.target.value})}
+                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                      required={modalType === 'create'}
+                      minLength="6"
+                    />
+                  </div>
+                  <div className="flex justify-end space-x-3 pt-4">
+                    <button
+                      type="button"
+                      onClick={() => setShowModal(false)}
+                      className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={submitting}
+                      className="px-4 py-2 bg-indigo-600 text-white rounded-md text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {submitting ? 'Processing...' : (modalType === 'create' ? 'Create User' : 'Update User')}
+                    </button>
+                  </div>
+                </form>
+              )}
             </div>
           </div>
         </div>

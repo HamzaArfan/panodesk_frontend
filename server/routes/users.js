@@ -2,10 +2,13 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const { body, validationResult } = require('express-validator');
 const { PrismaClient } = require('@prisma/client');
-const { authorize } = require('../middleware/auth');
+const { authenticate, authorize } = require('../middleware/auth');
 
 const router = express.Router();
 const prisma = new PrismaClient();
+
+// Apply authentication middleware to all routes
+router.use(authenticate);
 
 // GET /api/users - List all users (System User only)
 router.get('/', authorize(['SUPER_ADMIN', 'SYSTEM_USER']), async (req, res) => {
@@ -214,7 +217,8 @@ router.put('/:id',
     body('firstName').optional().trim().isLength({ min: 1 }),
     body('lastName').optional().trim().isLength({ min: 1 }),
     body('role').optional().isIn(['SUPER_ADMIN', 'SYSTEM_USER', 'ORGANIZATION_MANAGER', 'REVIEWER']),
-    body('isActive').optional().isBoolean()
+    body('isActive').optional().isBoolean(),
+    body('password').optional().isLength({ min: 6 })
   ],
   async (req, res) => {
     try {
@@ -228,12 +232,17 @@ router.put('/:id',
       }
 
       const { id } = req.params;
-      const updateData = req.body;
+      const { password, ...updateData } = req.body;
 
-      // Remove password and sensitive fields from update data
-      delete updateData.password;
+      // Remove sensitive fields from update data
       delete updateData.passwordResetToken;
       delete updateData.emailVerificationToken;
+
+      // Handle password update if provided
+      if (password) {
+        const hashedPassword = await bcrypt.hash(password, 12);
+        updateData.password = hashedPassword;
+      }
 
       const user = await prisma.user.update({
         where: { id },

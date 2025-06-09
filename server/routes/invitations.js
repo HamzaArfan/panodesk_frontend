@@ -2,11 +2,15 @@ const express = require('express');
 const crypto = require('crypto');
 const { body, validationResult } = require('express-validator');
 const { PrismaClient } = require('@prisma/client');
-const { authorize } = require('../middleware/auth');
+const { authenticate, authorize } = require('../middleware/auth');
 const { sendEmail } = require('../utils/email');
+const { validateOptionalCUID } = require('../utils/validation');
 
 const router = express.Router();
 const prisma = new PrismaClient();
+
+// Apply authentication middleware to all routes
+router.use(authenticate);
 
 // GET /api/invitations - List invitations
 router.get('/', async (req, res) => {
@@ -154,7 +158,7 @@ router.post('/',
   [
     body('email').isEmail().normalizeEmail().withMessage('Valid email is required'),
     body('role').isIn(['SUPER_ADMIN', 'SYSTEM_USER', 'ORGANIZATION_MANAGER', 'REVIEWER']).withMessage('Valid role is required'),
-    body('projectId').optional().isUUID().withMessage('Valid project ID required if provided')
+    validateOptionalCUID('projectId', 'Valid project ID required if provided')
   ],
   async (req, res) => {
     try {

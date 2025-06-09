@@ -1,10 +1,14 @@
 const express = require('express');
 const { body, validationResult } = require('express-validator');
 const { PrismaClient } = require('@prisma/client');
-const { authorize, checkResourceAccess } = require('../middleware/auth');
+const { authenticate, authorize, checkResourceAccess } = require('../middleware/auth');
+const { validateCUID, validateOptionalCUID } = require('../utils/validation');
 
 const router = express.Router();
 const prisma = new PrismaClient();
+
+// Apply authentication middleware to all routes
+router.use(authenticate);
 
 // GET /api/projects - List projects
 router.get('/', async (req, res) => {
@@ -167,7 +171,7 @@ router.post('/',
   [
     body('name').trim().isLength({ min: 1 }).withMessage('Project name is required'),
     body('description').optional().trim(),
-    body('organizationId').isUUID().withMessage('Valid organization ID is required')
+    validateCUID('organizationId', 'Valid organization ID is required')
   ],
   async (req, res) => {
     try {
@@ -236,7 +240,7 @@ router.put('/:id',
     body('name').optional().trim().isLength({ min: 1 }),
     body('description').optional().trim(),
     body('isActive').optional().isBoolean(),
-    body('currentTourId').optional().isUUID()
+    validateOptionalCUID('currentTourId', 'Valid tour ID required if provided')
   ],
   async (req, res) => {
     try {
@@ -342,7 +346,7 @@ router.delete('/:id',
 router.post('/:id/reviewers',
   authorize(['SUPER_ADMIN', 'SYSTEM_USER', 'ORGANIZATION_MANAGER']),
   [
-    body('userId').isUUID().withMessage('Valid user ID is required')
+    validateCUID('userId', 'Valid user ID is required')
   ],
   async (req, res) => {
     try {

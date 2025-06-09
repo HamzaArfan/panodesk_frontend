@@ -40,10 +40,6 @@ const DashboardLayout = ({ children, activeTab = 'overview' }) => {
     { name: 'Invitations', href: '/dashboard/invitations', icon: Mail, id: 'invitations' },
   ];
 
-  const userMenuItems = [
-    { name: 'Profile', href: '/dashboard/profile' },
-    { name: 'Settings', href: '/dashboard/settings' },
-  ];
 
   const getRoleColor = (role) => {
     switch (role) {
@@ -96,26 +92,6 @@ const DashboardLayout = ({ children, activeTab = 'overview' }) => {
             </nav>
           </div>
 
-          {/* User info at bottom */}
-          <div className="flex-shrink-0 flex border-t border-gray-200 p-4">
-            <div className="flex items-center w-full">
-              <div className="flex-shrink-0">
-                <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center">
-                  <span className="text-white font-semibold text-sm">
-                    {user?.firstName?.[0]}{user?.lastName?.[0]}
-                  </span>
-                </div>
-              </div>
-              <div className="ml-3 flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900 truncate">
-                  {user?.firstName} {user?.lastName}
-                </p>
-                <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getRoleColor(user?.role)}`}>
-                  {formatRole(user?.role || '')}
-                </span>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
 
@@ -189,11 +165,6 @@ const DashboardLayout = ({ children, activeTab = 'overview' }) => {
                     onClick={() => setUserMenuOpen(!userMenuOpen)}
                     className="flex items-center space-x-3 text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                   >
-                    <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center">
-                      <span className="text-white font-semibold text-xs">
-                        {user?.firstName?.[0]}{user?.lastName?.[0]}
-                      </span>
-                    </div>
                     <span className="hidden sm:block text-gray-700 font-medium">
                       {user?.firstName} {user?.lastName}
                     </span>
@@ -207,18 +178,6 @@ const DashboardLayout = ({ children, activeTab = 'overview' }) => {
                           <p className="font-medium">{user?.firstName} {user?.lastName}</p>
                           <p className="text-gray-500">{user?.email}</p>
                         </div>
-                        {userMenuItems.map((item) => (
-                          <button
-                            key={item.name}
-                            onClick={() => {
-                              router.push(item.href);
-                              setUserMenuOpen(false);
-                            }}
-                            className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                          >
-                            {item.name}
-                          </button>
-                        ))}
                         <button
                           onClick={handleLogout}
                           className="block w-full text-left px-4 py-2 text-sm text-red-700 hover:bg-red-50"

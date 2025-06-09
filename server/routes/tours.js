@@ -1,10 +1,14 @@
 const express = require('express');
 const { body, validationResult } = require('express-validator');
 const { PrismaClient } = require('@prisma/client');
-const { authorize, checkResourceAccess } = require('../middleware/auth');
+const { authenticate, authorize, checkResourceAccess } = require('../middleware/auth');
+const { validateCUID } = require('../utils/validation');
 
 const router = express.Router();
 const prisma = new PrismaClient();
+
+// Apply authentication middleware to all routes
+router.use(authenticate);
 
 // GET /api/tours - List tours
 router.get('/', async (req, res) => {
@@ -175,7 +179,7 @@ router.post('/',
     body('version').trim().isLength({ min: 1 }).withMessage('Tour version is required'),
     body('description').optional().trim(),
     body('data').optional(),
-    body('projectId').isUUID().withMessage('Valid project ID is required')
+    validateCUID('projectId', 'Valid project ID is required')
   ],
   async (req, res) => {
     try {

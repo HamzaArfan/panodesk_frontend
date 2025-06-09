@@ -1,10 +1,14 @@
 const express = require('express');
 const { body, validationResult } = require('express-validator');
 const { PrismaClient } = require('@prisma/client');
-const { authorize, checkResourceAccess } = require('../middleware/auth');
+const { authenticate, authorize, checkResourceAccess } = require('../middleware/auth');
+const { validateCUID, validateOptionalCUID } = require('../utils/validation');
 
 const router = express.Router();
 const prisma = new PrismaClient();
+
+// Apply authentication middleware to all routes
+router.use(authenticate);
 
 // GET /api/comments - List comments
 router.get('/', async (req, res) => {
@@ -202,13 +206,15 @@ router.get('/:id', checkResourceAccess('comment'), async (req, res) => {
 router.post('/',
   [
     body('content').trim().isLength({ min: 1 }).withMessage('Comment content is required'),
-    body('tourId').isUUID().withMessage('Valid tour ID is required'),
-    body('parentId').optional().isUUID().withMessage('Valid parent comment ID required if provided')
+    validateCUID('tourId', 'Valid tour ID is required'),
+    validateOptionalCUID('parentId', 'Valid parent comment ID required if provided')
   ],
   async (req, res) => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
+        console.error('Validation errors:', errors.array());
+        console.error('Request body:', req.body);
         return res.status(400).json({
           success: false,
           message: 'Validation errors',
@@ -218,6 +224,8 @@ router.post('/',
 
       const { content, tourId, parentId } = req.body;
       const user = req.user;
+
+      console.log('Creating comment with data:', { content, tourId, parentId, userId: user.id });
 
       // Verify tour exists and user has access
       const tour = await prisma.tour.findUnique({
@@ -275,7 +283,7 @@ router.post('/',
           content,
           userId: user.id,
           tourId,
-          parentId
+          parentId: parentId || null // Ensure empty strings become null
         },
         include: {
           user: {
@@ -302,6 +310,7 @@ router.post('/',
       });
     } catch (error) {
       console.error('Create comment error:', error);
+      console.error('Request body:', req.body);
       res.status(500).json({
         success: false,
         message: 'Failed to create comment'

@@ -21,7 +21,20 @@ export const AuthProvider = ({ children }) => {
 
   // Check if user is authenticated on app load
   useEffect(() => {
-    checkAuth();
+    // Only check auth if not on an auth page
+    if (typeof window !== 'undefined') {
+      const currentPath = window.location.pathname;
+      const authPages = ['/login', '/signup', '/forgot-password', '/reset-password', '/verify-email', '/accept-invitation'];
+      
+      if (!authPages.includes(currentPath)) {
+        checkAuth();
+      } else {
+        // On auth pages, just set loading to false without making API call
+        setLoading(false);
+      }
+    } else {
+      checkAuth();
+    }
   }, []);
 
   const checkAuth = async () => {
@@ -136,15 +149,15 @@ export const AuthProvider = ({ children }) => {
     return roles.includes(user?.role);
   };
 
-  const isSuperAdmin = () => hasRole('super-admin');
-  const isSystemUser = () => hasRole('system-user');
-  const isOrgManager = () => hasRole('organization-manager');
-  const isReviewer = () => hasRole('reviewer');
+  const isSuperAdmin = () => hasRole('SUPER_ADMIN');
+  const isSystemUser = () => hasRole('SYSTEM_USER');
+  const isOrgManager = () => hasRole('ORGANIZATION_MANAGER');
+  const isReviewer = () => hasRole('REVIEWER');
 
-  const canManageUsers = () => hasAnyRole(['super-admin', 'system-user']);
-  const canManageOrganizations = () => hasAnyRole(['super-admin', 'system-user', 'organization-manager']);
-  const canManageProjects = () => hasAnyRole(['super-admin', 'system-user', 'organization-manager']);
-  const canManageTours = () => hasAnyRole(['super-admin', 'system-user', 'organization-manager', 'reviewer']);
+  const canManageUsers = () => hasAnyRole(['SUPER_ADMIN', 'SYSTEM_USER']);
+  const canManageOrganizations = () => hasAnyRole(['SUPER_ADMIN', 'SYSTEM_USER']);
+  const canManageProjects = () => hasAnyRole(['SUPER_ADMIN', 'SYSTEM_USER', 'ORGANIZATION_MANAGER']);
+  const canManageTours = () => hasAnyRole(['SUPER_ADMIN', 'SYSTEM_USER', 'ORGANIZATION_MANAGER', 'REVIEWER']);
 
   const value = {
     user,

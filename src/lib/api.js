@@ -16,9 +16,14 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Redirect to login on unauthorized
+      // Only redirect to login if not already on an auth page
       if (typeof window !== 'undefined') {
-        window.location.href = '/login';
+        const currentPath = window.location.pathname;
+        const authPages = ['/login', '/signup', '/forgot-password', '/reset-password', '/verify-email', '/accept-invitation'];
+        
+        if (!authPages.includes(currentPath)) {
+          window.location.href = '/login';
+        }
       }
     }
     return Promise.reject(error);
@@ -33,7 +38,8 @@ export const authAPI = {
   forgotPassword: (email) => api.post('/auth/forgot-password', { email }),
   resetPassword: (token, password) => api.post('/auth/reset-password', { token, password }),
   verifyEmail: (token) => api.post('/auth/verify-email', { token }),
-  acceptInvitation: (token, userData) => api.post('/auth/accept-invitation', { token, ...userData }),
+  verifyInvitation: (token) => api.get(`/auth/verify-invitation?token=${token}`),
+  acceptInvitation: (payload) => api.post('/auth/accept-invitation', payload),
   getCurrentUser: () => api.get('/auth/me'),
 };
 

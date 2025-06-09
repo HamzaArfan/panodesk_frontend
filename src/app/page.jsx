@@ -1,6 +1,34 @@
+'use client';
+
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '../contexts/AuthContext';
 import Link from 'next/link';
 
 export default function HomePage() {
+  const router = useRouter();
+  const { isAuthenticated, loading } = useAuth();
+
+  useEffect(() => {
+    if (!loading && isAuthenticated) {
+      router.push('/dashboard/projects');
+    }
+  }, [isAuthenticated, loading, router]);
+
+  // Show loading while checking auth
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-white flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-indigo-600"></div>
+      </div>
+    );
+  }
+
+  // Don't render if authenticated (will redirect)
+  if (isAuthenticated) {
+    return null;
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -8,10 +36,10 @@ export default function HomePage() {
           <div className="text-center">
             <h1 className="text-4xl font-bold text-gray-900 sm:text-6xl">
               Welcome to{' '}
-              <span className="text-indigo-600">MyApp</span>
+              <span className="text-indigo-600">PanoDesk</span>
             </h1>
             <p className="mt-6 text-xl text-gray-600 max-w-2xl mx-auto">
-              Your secure authentication portal. Sign in to access your dashboard or create a new account to get started.
+              Your secure tour review portal. Sign in to access your dashboard or create a new account to get started.
             </p>
             
             <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center">

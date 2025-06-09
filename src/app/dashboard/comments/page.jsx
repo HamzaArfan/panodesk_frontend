@@ -125,7 +125,18 @@ function CommentsContent() {
       if (editingComment) {
         response = await commentsAPI.update(editingComment.id, formData);
       } else {
-        response = await commentsAPI.create(formData);
+        // Clean up the form data before sending
+        const cleanedFormData = {
+          content: formData.content,
+          tourId: formData.tourId,
+        };
+        
+        // Only include parentId if it's not empty
+        if (formData.parentId && formData.parentId.trim() !== '') {
+          cleanedFormData.parentId = formData.parentId;
+        }
+        
+        response = await commentsAPI.create(cleanedFormData);
       }
 
       if (response.data.success) {

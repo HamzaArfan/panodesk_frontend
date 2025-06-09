@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '../../contexts/AuthContext';
 import DashboardLayout from '../../components/DashboardLayout';
 import ProtectedRoute from '../../components/ProtectedRoute';
@@ -18,6 +19,7 @@ import {
 import { usersAPI, organizationsAPI, projectsAPI, toursAPI, commentsAPI, invitationsAPI } from '../../lib/api';
 
 function DashboardContent() {
+  const router = useRouter();
   const { user, canManageUsers, canManageOrganizations, canManageProjects, canManageTours } = useAuth();
   const [stats, setStats] = useState({
     users: 0,
@@ -29,6 +31,10 @@ function DashboardContent() {
   });
   const [loading, setLoading] = useState(true);
   const [recentActivity, setRecentActivity] = useState([]);
+
+  useEffect(() => {
+    router.push('/dashboard/projects');
+  }, [router]);
 
   useEffect(() => {
     loadDashboardData();
@@ -92,28 +98,28 @@ function DashboardContent() {
 
   const getRoleDisplayInfo = () => {
     switch (user?.role) {
-      case 'super-admin':
+      case 'SUPER_ADMIN':
         return {
           title: 'Super Administrator',
           description: 'Full system access and control',
           color: 'text-red-600',
           bgColor: 'bg-red-50'
         };
-      case 'system-user':
+      case 'SYSTEM_USER':
         return {
           title: 'System User',
           description: 'Manage all organizational data',
           color: 'text-blue-600',
           bgColor: 'bg-blue-50'
         };
-      case 'organization-manager':
+      case 'ORGANIZATION_MANAGER':
         return {
           title: 'Organization Manager',
           description: 'Manage your organization and projects',
           color: 'text-green-600',
           bgColor: 'bg-green-50'
         };
-      case 'reviewer':
+      case 'REVIEWER':
         return {
           title: 'Reviewer',
           description: 'Review and comment on projects',
@@ -177,174 +183,7 @@ function DashboardContent() {
     }
   ];
 
-  return (
-    <DashboardLayout activeTab="overview">
-      <div className="space-y-8">
-        {/* Welcome Section */}
-        <div className="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl p-8 text-white">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold mb-2">
-                Welcome back, {user?.firstName}!
-              </h1>
-              <p className="text-indigo-100 text-lg mb-4">
-                Here's what's happening with your system today.
-              </p>
-              <div className={`inline-flex items-center px-4 py-2 rounded-full ${roleInfo.bgColor} ${roleInfo.color} bg-opacity-20 text-white`}>
-                <Activity className="w-4 h-4 mr-2" />
-                {roleInfo.title}
-              </div>
-            </div>
-            <div className="hidden md:block">
-              <Calendar className="w-16 h-16 text-indigo-200" />
-            </div>
-          </div>
-        </div>
-
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
-          {canManageUsers() && (
-            <StatCard
-              title="Total Users"
-              value={stats.users}
-              icon={Users}
-              color="bg-blue-500"
-              description="Registered users"
-            />
-          )}
-          {canManageOrganizations() && (
-            <StatCard
-              title="Organizations"
-              value={stats.organizations}
-              icon={Building2}
-              color="bg-green-500"
-              description="Active organizations"
-            />
-          )}
-          {canManageProjects() && (
-            <StatCard
-              title="Projects"
-              value={stats.projects}
-              icon={FolderOpen}
-              color="bg-purple-500"
-              description="Total projects"
-            />
-          )}
-          {canManageTours() && (
-            <StatCard
-              title="Tours"
-              value={stats.tours}
-              icon={Route}
-              color="bg-indigo-500"
-              description="Published tours"
-            />
-          )}
-          <StatCard
-            title="Comments"
-            value={stats.comments}
-            icon={MessageSquare}
-            color="bg-orange-500"
-            description="Total comments"
-          />
-          <StatCard
-            title="Invitations"
-            value={stats.invitations}
-            icon={Mail}
-            color="bg-pink-500"
-            description="Pending invites"
-          />
-        </div>
-
-        {/* Quick Actions */}
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">Quick Actions</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {quickActions.map((action) => {
-              const Icon = action.icon;
-              return (
-                <div
-                  key={action.name}
-                  className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-all duration-200 cursor-pointer group"
-                  onClick={() => window.location.href = action.href}
-                >
-                  <div className="flex items-start space-x-4">
-                    <div className={`flex-shrink-0 p-3 rounded-lg ${action.color} group-hover:scale-110 transition-transform duration-200`}>
-                      <Icon className="w-6 h-6 text-white" />
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="text-lg font-semibold text-gray-900 group-hover:text-indigo-600 transition-colors duration-200">
-                        {action.name}
-                      </h3>
-                      <p className="text-gray-600 text-sm mt-1">
-                        {action.description}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Role Information */}
-        <div className={`${roleInfo.bgColor} rounded-xl p-6 border border-gray-200`}>
-          <div className="flex items-start space-x-4">
-            <div className="flex-shrink-0">
-              <div className={`p-3 rounded-lg ${roleInfo.color} bg-opacity-10`}>
-                <Activity className={`w-6 h-6 ${roleInfo.color}`} />
-              </div>
-            </div>
-            <div className="flex-1">
-              <h3 className={`text-lg font-semibold ${roleInfo.color}`}>
-                Your Role: {roleInfo.title}
-              </h3>
-              <p className="text-gray-600 text-sm mt-1 mb-4">
-                {roleInfo.description}
-              </p>
-              <div className="space-y-2">
-                <h4 className="font-medium text-gray-900">Available Features:</h4>
-                <ul className="text-sm text-gray-600 space-y-1">
-                  {canManageUsers() && <li>• Manage users and roles</li>}
-                  {canManageOrganizations() && <li>• Manage organizations and members</li>}
-                  {canManageProjects() && <li>• Create and manage projects</li>}
-                  {canManageTours() && <li>• Create and edit tours</li>}
-                  <li>• View and manage comments</li>
-                  <li>• Send and manage invitations</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* System Status */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">System Status</h3>
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">API Status</span>
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                <span className="w-1.5 h-1.5 bg-green-400 rounded-full mr-1.5"></span>
-                Online
-              </span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Database</span>
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                <span className="w-1.5 h-1.5 bg-green-400 rounded-full mr-1.5"></span>
-                Connected
-              </span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Last Updated</span>
-              <span className="text-sm text-gray-600">
-                {new Date().toLocaleString()}
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </DashboardLayout>
-  );
+  return null;
 }
 
 export default function DashboardPage() {

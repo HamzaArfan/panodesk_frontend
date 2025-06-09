@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { CheckCircle, XCircle, Loader, Mail, User, Lock } from 'lucide-react';
-import axios from 'axios';
+import { authAPI } from '../../lib/api';
 import toast from 'react-hot-toast';
 
 export default function AcceptInvitationPage() {
@@ -34,7 +34,7 @@ export default function AcceptInvitationPage() {
 
   const verifyInvitation = async (token) => {
     try {
-      const response = await axios.get(`/api/auth/verify-invitation?token=${token}`);
+      const response = await authAPI.verifyInvitation(token);
       
       if (response.data.success) {
         setInvitation(response.data.data);
@@ -62,10 +62,12 @@ export default function AcceptInvitationPage() {
       
       const payload = { token };
       if (userData) {
-        payload.userData = userData;
+        payload.firstName = userData.firstName;
+        payload.lastName = userData.lastName;
+        payload.password = userData.password;
       }
       
-      const response = await axios.post('/api/auth/accept-invitation', payload);
+      const response = await authAPI.acceptInvitation(payload);
       
       if (response.data.success) {
         setStatus('success');

@@ -5,6 +5,7 @@ const crypto = require('crypto');
 const { body, validationResult } = require('express-validator');
 const { PrismaClient } = require('@prisma/client');
 const { sendEmail } = require('../utils/email');
+const { authenticate } = require('../middleware/auth');
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -76,7 +77,7 @@ router.post('/register', validateRegistration, async (req, res) => {
         firstName,
         lastName,
         emailVerificationToken,
-        role: 'REVIEWER' // Default role
+        role: 'REVIEWER' // Default role - represents "normal" user
       }
     });
 
@@ -389,6 +390,95 @@ router.post('/verify-email', async (req, res) => {
   }
 });
 
+// GET /api/auth/verify-invitation - Check invitation validity
+router.get('/verify-invitation', async (req, res) => {
+  try {
+    const { token } = req.query;
+
+    if (!token) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invitation token is required'
+      });
+    }
+
+    const invitation = await prisma.invitation.findUnique({
+      where: { token },
+      include: {
+        sender: {
+          select: {
+            firstName: true,
+            lastName: true,
+            email: true
+          }
+        }
+      }
+    });
+
+    if (!invitation) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid invitation token'
+      });
+    }
+
+    if (invitation.status !== 'PENDING') {
+      return res.status(400).json({
+        success: false,
+        message: 'Invitation is no longer valid'
+      });
+    }
+
+    if (invitation.expiresAt < new Date()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invitation has expired'
+      });
+    }
+
+    // Check if user already exists
+    const existingUser = await prisma.user.findUnique({
+      where: { email: invitation.email }
+    });
+
+    // Get project info if invitation is for a project
+    let project = null;
+    if (invitation.projectId) {
+      project = await prisma.project.findUnique({
+        where: { id: invitation.projectId },
+        select: {
+          id: true,
+          name: true,
+          organization: {
+            select: {
+              id: true,
+              name: true
+            }
+          }
+        }
+      });
+    }
+
+    res.json({
+      success: true,
+      data: {
+        email: invitation.email,
+        role: invitation.role,
+        needsRegistration: !existingUser,
+        project,
+        sender: invitation.sender
+      }
+    });
+
+  } catch (error) {
+    console.error('Verify invitation error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to verify invitation'
+    });
+  }
+});
+
 // POST /api/auth/accept-invitation
 router.post('/accept-invitation', async (req, res) => {
   try {
@@ -510,6 +600,33 @@ router.post('/accept-invitation', async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Failed to accept invitation'
+    });
+  }
+});
+
+// GET /api/auth/me - Get current user
+router.get('/me', authenticate, async (req, res) => {
+  try {
+    const user = req.user;
+    
+    res.json({
+      success: true,
+      user: {
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        role: user.role,
+        emailVerified: user.emailVerified,
+        organizations: user.organizationMemberships?.map(m => m.organization) || [],
+        managedOrganizations: user.managedOrganizations || []
+      }
+    });
+  } catch (error) {
+    console.error('Get current user error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to get user information'
     });
   }
 });
