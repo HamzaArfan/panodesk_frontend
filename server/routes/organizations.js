@@ -152,6 +152,7 @@ router.post('/',
   [
     body('name').trim().isLength({ min: 1 }).withMessage('Organization name is required'),
     body('description').optional().trim(),
+    body('website').optional().isURL().withMessage('Website must be a valid URL'),
     validateCUID('managerId', 'Valid manager ID is required')
   ],
   async (req, res) => {
@@ -165,7 +166,7 @@ router.post('/',
         });
       }
 
-      const { name, description, managerId } = req.body;
+      const { name, description, website, managerId } = req.body;
 
       // Verify manager exists and has appropriate role
       const manager = await prisma.user.findUnique({
@@ -190,6 +191,7 @@ router.post('/',
         data: {
           name,
           description,
+          website,
           managerId
         },
         include: {
@@ -225,6 +227,19 @@ router.put('/:id',
   [
     body('name').optional().trim().isLength({ min: 1 }),
     body('description').optional().trim(),
+    body('website').optional().custom((value) => {
+      // Allow empty string or null, but if provided, must be valid URL
+      if (value && value.trim() !== '') {
+        // Use a simple URL validation
+        try {
+          new URL(value);
+          return true;
+        } catch {
+          throw new Error('Website must be a valid URL');
+        }
+      }
+      return true;
+    }),
     validateOptionalCUID('managerId', 'Valid manager ID required if provided'),
     body('isActive').optional().isBoolean()
   ],
@@ -241,6 +256,11 @@ router.put('/:id',
 
       const { id } = req.params;
       const updateData = req.body;
+
+      // Handle empty website field - convert to null for database
+      if ('website' in updateData && updateData.website === '') {
+        updateData.website = null;
+      }
 
       // If updating manager, verify they exist and have appropriate role
       if (updateData.managerId) {
