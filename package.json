@@ -16,7 +16,7 @@
   },
   "dependencies": {
     "@headlessui/react": "^2.1.4",
-    "@prisma/client": "^5.20.0",
+    "@prisma/client": "^6.9.0",
     "axios": "^1.7.3",
     "bcryptjs": "^2.4.3",
     "cookie-parser": "^1.4.6",
@@ -43,7 +43,8 @@
     "eslint": "^9",
     "eslint-config-next": "15.3.3",
     "nodemon": "^3.1.4",
-    "prisma": "^5.20.0",
+    "prisma": "^6.9.0",
     "tailwindcss": "^4"
-  }
+  },
+  "packageManager": "yarn@4.5.0"
 }
