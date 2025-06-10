@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { CheckCircle, XCircle, Loader, Mail, User, Lock } from 'lucide-react';
@@ -9,7 +9,7 @@ import { AUTH_ROUTES } from '../../constants';
 import toast from 'react-hot-toast';
 import Logo from '../../components/Logo';
 
-export default function AcceptInvitationPage() {
+function AcceptInvitationContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [status, setStatus] = useState('loading'); // 'loading', 'register', 'accepting', 'success', 'error'
@@ -298,5 +298,36 @@ export default function AcceptInvitationPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+function AcceptInvitationFallback() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8">
+        <div className="text-center">
+          <div className="mx-auto w-16 h-16 rounded-2xl flex items-center justify-center mb-6 shadow-lg">
+            <Logo className="w-8 h-8" />
+          </div>
+          <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
+            Accept Invitation
+          </h2>
+        </div>
+        <div className="bg-white p-8 rounded-lg shadow-md">
+          <div className="text-center space-y-4">
+            <Loader className="w-12 h-12 text-blue-600 mx-auto animate-spin" />
+            <p className="text-gray-600">Loading invitation...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function AcceptInvitationPage() {
+  return (
+    <Suspense fallback={<AcceptInvitationFallback />}>
+      <AcceptInvitationContent />
+    </Suspense>
   );
 } 
