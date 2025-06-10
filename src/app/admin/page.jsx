@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../contexts/AuthContext';
+import { ADMIN_ROUTES, DEFAULT_AUTHENTICATED_ROUTE } from '../../constants';
 import DashboardLayout from '../../components/DashboardLayout';
 import ProtectedRoute from '../../components/ProtectedRoute';
 import { 
@@ -33,7 +34,7 @@ function DashboardContent() {
   const [recentActivity, setRecentActivity] = useState([]);
 
   useEffect(() => {
-    router.push('/dashboard/projects');
+    router.push(DEFAULT_AUTHENTICATED_ROUTE);
   }, [router]);
 
   useEffect(() => {
@@ -142,42 +143,42 @@ function DashboardContent() {
     ...(canManageUsers() ? [{
       name: 'Manage Users',
       description: 'View and manage user accounts',
-      href: '/dashboard/users',
+      href: ADMIN_ROUTES.USERS,
       icon: Users,
       color: 'bg-blue-500'
     }] : []),
     ...(canManageOrganizations() ? [{
       name: 'Organizations',
       description: 'Manage organizations and members',
-      href: '/dashboard/organizations',
+      href: ADMIN_ROUTES.ORGANIZATIONS,
       icon: Building2,
       color: 'bg-green-500'
     }] : []),
     ...(canManageProjects() ? [{
       name: 'Projects',
       description: 'View and manage projects',
-      href: '/dashboard/projects',
+      href: ADMIN_ROUTES.PROJECTS,
       icon: FolderOpen,
       color: 'bg-purple-500'
     }] : []),
     ...(canManageTours() ? [{
       name: 'Tours',
       description: 'Manage tour content',
-      href: '/dashboard/tours',
+      href: ADMIN_ROUTES.TOURS,
       icon: Route,
       color: 'bg-indigo-500'
     }] : []),
     {
       name: 'Comments',
       description: 'View and moderate comments',
-      href: '/dashboard/comments',
+      href: ADMIN_ROUTES.COMMENTS,
       icon: MessageSquare,
       color: 'bg-orange-500'
     },
     {
       name: 'Invitations',
       description: 'Manage user invitations',
-      href: '/dashboard/invitations',
+      href: ADMIN_ROUTES.INVITATIONS,
       icon: Mail,
       color: 'bg-pink-500'
     }

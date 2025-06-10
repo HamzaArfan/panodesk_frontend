@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../contexts/AuthContext';
+import { AUTH_ROUTES } from '../../constants';
 import Logo from '../../components/Logo';
 
 export default function SignupPage() {
@@ -54,7 +55,7 @@ export default function SignupPage() {
       const result = await register(userData);
       
       if (result.success) {
-        router.push('/login?message=Please check your email to verify your account');
+        router.push(`${AUTH_ROUTES.LOGIN}?message=Please check your email to verify your account`);
       } else {
         setError(result.error);
       }
@@ -87,7 +88,7 @@ export default function SignupPage() {
           </p>
           <p className="mt-2 text-sm text-gray-500">
             Already have an account?{' '}
-            <button onClick={() => router.push('/login')} className="font-semibold text-indigo-600 hover:text-indigo-500 transition-colors duration-200">
+            <button onClick={() => router.push(AUTH_ROUTES.LOGIN)} className="font-semibold text-indigo-600 hover:text-indigo-500 transition-colors duration-200">
               Sign in here
             </button>
           </p>

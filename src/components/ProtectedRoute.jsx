@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../contexts/AuthContext';
+import { AUTH_ROUTES } from '../constants';
 
 const ProtectedRoute = ({ children, requiredRole = null }) => {
   const { user, isAuthenticated, loading, hasRole } = useAuth();
@@ -10,7 +11,7 @@ const ProtectedRoute = ({ children, requiredRole = null }) => {
 
   useEffect(() => {
     if (!loading && !isAuthenticated) {
-      router.push('/login');
+      router.push(AUTH_ROUTES.LOGIN);
     }
   }, [isAuthenticated, loading, router]);
 

@@ -17,7 +17,7 @@ import {
   Home,
   ChevronDown
 } from 'lucide-react';
-import { METADATA } from '../constants';
+import { METADATA, ADMIN_ROUTES, AUTH_ROUTES } from '../constants';
 import Logo from './Logo';
 
 const DashboardLayout = ({ children, activeTab = 'overview' }) => {
@@ -28,17 +28,17 @@ const DashboardLayout = ({ children, activeTab = 'overview' }) => {
 
   const handleLogout = async () => {
     await logout();
-    router.push('/login');
+    router.push(AUTH_ROUTES.LOGIN);
   };
 
   const navigation = [
-    { name: 'Dashboard', href: '/dashboard', icon: Home, id: 'overview' },
-    ...(canManageUsers() ? [{ name: 'Users', href: '/dashboard/users', icon: Users, id: 'users' }] : []),
-    ...(canManageOrganizations() ? [{ name: 'Organizations', href: '/dashboard/organizations', icon: Building2, id: 'organizations' }] : []),
-    ...(canManageProjects() ? [{ name: 'Projects', href: '/dashboard/projects', icon: FolderOpen, id: 'projects' }] : []),
-    ...(canManageTours() && user?.role !== 'ORGANIZATION_MANAGER' ? [{ name: 'Tours', href: '/dashboard/tours', icon: Route, id: 'tours' }] : []),
-    { name: 'Comments', href: '/dashboard/comments', icon: MessageSquare, id: 'comments' },
-    { name: 'Invitations', href: '/dashboard/invitations', icon: Mail, id: 'invitations' },
+    { name: 'Dashboard', href: ADMIN_ROUTES.DASHBOARD, icon: Home, id: 'overview' },
+    ...(canManageUsers() ? [{ name: 'Users', href: ADMIN_ROUTES.USERS, icon: Users, id: 'users' }] : []),
+    ...(canManageOrganizations() ? [{ name: 'Organizations', href: ADMIN_ROUTES.ORGANIZATIONS, icon: Building2, id: 'organizations' }] : []),
+    ...(canManageProjects() ? [{ name: 'Projects', href: ADMIN_ROUTES.PROJECTS, icon: FolderOpen, id: 'projects' }] : []),
+    ...(canManageTours() && user?.role !== 'ORGANIZATION_MANAGER' ? [{ name: 'Tours', href: ADMIN_ROUTES.TOURS, icon: Route, id: 'tours' }] : []),
+    { name: 'Comments', href: ADMIN_ROUTES.COMMENTS, icon: MessageSquare, id: 'comments' },
+    { name: 'Invitations', href: ADMIN_ROUTES.INVITATIONS, icon: Mail, id: 'invitations' },
   ];
 
 

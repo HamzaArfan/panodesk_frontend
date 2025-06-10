@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { CheckCircle, XCircle, Loader, Mail, User, Lock } from 'lucide-react';
 import { authAPI } from '../../lib/api';
+import { AUTH_ROUTES } from '../../constants';
 import toast from 'react-hot-toast';
 import Logo from '../../components/Logo';
 
@@ -76,7 +77,7 @@ export default function AcceptInvitationPage() {
         
         // Redirect to login after 3 seconds
         setTimeout(() => {
-          router.push('/login');
+          router.push(AUTH_ROUTES.LOGIN);
         }, 3000);
       } else {
         setStatus('error');

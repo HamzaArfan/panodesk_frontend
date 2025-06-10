@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { CheckCircle, XCircle, Loader } from 'lucide-react';
 import axios from 'axios';
+import { AUTH_ROUTES } from '../../constants';
 import toast from 'react-hot-toast';
 import Logo from '../../components/Logo';
 
@@ -36,7 +37,7 @@ export default function VerifyEmailPage() {
         
         // Redirect to login after 3 seconds
         setTimeout(() => {
-          router.push('/login');
+          router.push(AUTH_ROUTES.LOGIN);
         }, 3000);
       } else {
         setStatus('error');
@@ -95,13 +96,13 @@ export default function VerifyEmailPage() {
                   <p className="text-red-700 mb-4">{message}</p>
                   <div className="space-y-2">
                     <Link
-                      href="/login"
+                      href={AUTH_ROUTES.LOGIN}
                       className="block w-full bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
                     >
                       Go to Login
                     </Link>
                     <Link
-                      href="/signup"
+                      href={AUTH_ROUTES.SIGNUP}
                       className="block w-full border border-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-50 transition-colors"
                     >
                       Sign Up Again

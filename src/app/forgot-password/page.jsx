@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../contexts/AuthContext';
+import { AUTH_ROUTES } from '../../constants';
 import Logo from '../../components/Logo';
 
 export default function ForgotPasswordPage() {
@@ -52,7 +53,7 @@ export default function ForgotPasswordPage() {
               We've sent a password reset link to <strong>{email}</strong>
             </p>
             <button
-              onClick={() => router.push('/login')}
+              onClick={() => router.push(AUTH_ROUTES.LOGIN)}
               className="text-indigo-600 hover:text-indigo-500 font-semibold"
             >
               Back to login
@@ -133,7 +134,7 @@ export default function ForgotPasswordPage() {
             <div className="text-center">
               <button
                 type="button"
-                onClick={() => router.push('/login')}
+                onClick={() => router.push(AUTH_ROUTES.LOGIN)}
                 className="text-sm text-gray-600 hover:text-gray-800 transition-colors duration-200"
               >
                 Back to login

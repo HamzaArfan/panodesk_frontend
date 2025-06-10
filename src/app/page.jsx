@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../contexts/AuthContext';
 import Link from 'next/link';
-import { METADATA } from '../constants';
+import { METADATA, DEFAULT_AUTHENTICATED_ROUTE, AUTH_ROUTES } from '../constants';
 
 export default function HomePage() {
   const router = useRouter();
@@ -12,7 +12,7 @@ export default function HomePage() {
 
   useEffect(() => {
     if (!loading && isAuthenticated) {
-      router.push('/dashboard/projects');
+      router.push(DEFAULT_AUTHENTICATED_ROUTE);
     }
   }, [isAuthenticated, loading, router]);
 
@@ -45,13 +45,13 @@ export default function HomePage() {
             
             <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center">
               <Link
-                href="/login"
+                href={AUTH_ROUTES.LOGIN}
                 className="inline-flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 transition-colors duration-200"
               >
                 Sign In
               </Link>
               <Link
-                href="/signup"
+                href={AUTH_ROUTES.SIGNUP}
                 className="inline-flex items-center justify-center px-8 py-3 border border-indigo-600 text-base font-medium rounded-md text-indigo-600 bg-white hover:bg-indigo-50 transition-colors duration-200"
               >
                 Create Account

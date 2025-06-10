@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../contexts/AuthContext';
+import { DEFAULT_AUTHENTICATED_ROUTE, AUTH_ROUTES } from '../../constants';
 import Logo from '../../components/Logo';
 
 export default function LoginPage() {
@@ -36,7 +37,7 @@ export default function LoginPage() {
       const result = await login(formData.email, formData.password);
       
       if (result.success) {
-        router.push('/dashboard/projects');
+        router.push(DEFAULT_AUTHENTICATED_ROUTE);
       } else {
         setError(result.error);
       }
@@ -69,7 +70,7 @@ export default function LoginPage() {
           </p>
           <p className="mt-2 text-sm text-gray-500">
             Don't have an account?{' '}
-            <button onClick={() => router.push('/signup')} className="font-semibold text-indigo-600 hover:text-indigo-500 transition-colors duration-200">
+            <button onClick={() => router.push(AUTH_ROUTES.SIGNUP)} className="font-semibold text-indigo-600 hover:text-indigo-500 transition-colors duration-200">
               Create one here
             </button>
           </p>
@@ -144,7 +145,7 @@ export default function LoginPage() {
 
               <button 
                 type="button"
-                onClick={() => router.push('/forgot-password')}
+                onClick={() => router.push(AUTH_ROUTES.FORGOT_PASSWORD)}
                 className="text-sm font-semibold text-indigo-600 hover:text-indigo-500 transition-colors duration-200"
               >
                 Forgot password?

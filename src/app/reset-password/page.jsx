@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '../../contexts/AuthContext';
+import { AUTH_ROUTES } from '../../constants';
 import Logo from '../../components/Logo';
 
 export default function ResetPasswordPage() {
@@ -86,7 +87,7 @@ export default function ResetPasswordPage() {
               Your password has been reset successfully. You can now sign in with your new password.
             </p>
             <button
-              onClick={() => router.push('/login')}
+              onClick={() => router.push(AUTH_ROUTES.LOGIN)}
               className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-6 py-3 rounded-xl font-semibold hover:from-indigo-700 hover:to-purple-700 transition-all duration-200"
             >
               Go to Login
@@ -190,7 +191,7 @@ export default function ResetPasswordPage() {
             <div className="text-center">
               <button
                 type="button"
-                onClick={() => router.push('/login')}
+                onClick={() => router.push(AUTH_ROUTES.LOGIN)}
                 className="text-sm text-gray-600 hover:text-gray-800 transition-colors duration-200"
               >
                 Back to login
