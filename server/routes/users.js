@@ -10,6 +10,26 @@ const prisma = new PrismaClient();
 // Apply authentication middleware to all routes
 router.use(authenticate);
 
+// Helper function to check if user can perform action on target role
+const canManageUserRole = (currentUserRole, targetUserRole) => {
+  // Super admin can manage everyone
+  if (currentUserRole === 'SUPER_ADMIN') {
+    return true;
+  }
+  
+  // System user cannot manage super admins
+  if (currentUserRole === 'SYSTEM_USER' && targetUserRole === 'SUPER_ADMIN') {
+    return false;
+  }
+  
+  // System user can manage system users and below
+  if (currentUserRole === 'SYSTEM_USER') {
+    return ['SYSTEM_USER', 'ORGANIZATION_MANAGER', 'REVIEWER'].includes(targetUserRole);
+  }
+  
+  return false;
+};
+
 // GET /api/users - List all users (System User only)
 router.get('/', authorize(['SUPER_ADMIN', 'SYSTEM_USER']), async (req, res) => {
   try {
@@ -17,6 +37,14 @@ router.get('/', authorize(['SUPER_ADMIN', 'SYSTEM_USER']), async (req, res) => {
     const skip = (page - 1) * limit;
 
     const where = {};
+    
+    // System users cannot see super admins
+    if (req.user.role === 'SYSTEM_USER') {
+      where.role = {
+        not: 'SUPER_ADMIN'
+      };
+    }
+    
     if (search) {
       where.OR = [
         { firstName: { contains: search, mode: 'insensitive' } },
@@ -24,7 +52,9 @@ router.get('/', authorize(['SUPER_ADMIN', 'SYSTEM_USER']), async (req, res) => {
         { email: { contains: search, mode: 'insensitive' } }
       ];
     }
-    if (role) {
+    if (role && req.user.role === 'SUPER_ADMIN') {
+      where.role = role;
+    } else if (role && req.user.role === 'SYSTEM_USER' && role !== 'SUPER_ADMIN') {
       where.role = role;
     }
 
@@ -118,6 +148,14 @@ router.get('/:id', authorize(['SUPER_ADMIN', 'SYSTEM_USER']), async (req, res) =
       });
     }
 
+    // Check if current user can view this user
+    if (!canManageUserRole(req.user.role, user.role)) {
+      return res.status(403).json({
+        success: false,
+        message: 'Insufficient permissions to view this user'
+      });
+    }
+
     // Remove password from response
     const { password, passwordResetToken, emailVerificationToken, ...userWithoutSensitive } = user;
 
@@ -156,6 +194,14 @@ router.post('/',
       }
 
       const { email, password, firstName, lastName, role } = req.body;
+
+      // Check if current user can create user with this role
+      if (!canManageUserRole(req.user.role, role)) {
+        return res.status(403).json({
+          success: false,
+          message: 'Insufficient permissions to create user with this role'
+        });
+      }
 
       // Check if user already exists
       const existingUser = await prisma.user.findUnique({
@@ -232,7 +278,41 @@ router.put('/:id',
       }
 
       const { id } = req.params;
-      const { password, ...updateData } = req.body;
+      const { password, role, ...updateData } = req.body;
+
+      // First, get the target user to check their current role
+      const targetUser = await prisma.user.findUnique({
+        where: { id },
+        select: { role: true }
+      });
+
+      if (!targetUser) {
+        return res.status(404).json({
+          success: false,
+          message: 'User not found'
+        });
+      }
+
+      // Check if current user can update this user
+      if (!canManageUserRole(req.user.role, targetUser.role)) {
+        return res.status(403).json({
+          success: false,
+          message: 'Insufficient permissions to update this user'
+        });
+      }
+
+      // If role is being changed, check if current user can assign the new role
+      if (role && !canManageUserRole(req.user.role, role)) {
+        return res.status(403).json({
+          success: false,
+          message: 'Insufficient permissions to assign this role'
+        });
+      }
+
+      // Add role to update data if provided
+      if (role) {
+        updateData.role = role;
+      }
 
       // Remove sensitive fields from update data
       delete updateData.passwordResetToken;
@@ -284,6 +364,27 @@ router.put('/:id',
 router.delete('/:id', authorize(['SUPER_ADMIN', 'SYSTEM_USER']), async (req, res) => {
   try {
     const { id } = req.params;
+
+    // First, get the target user to check their role
+    const targetUser = await prisma.user.findUnique({
+      where: { id },
+      select: { role: true }
+    });
+
+    if (!targetUser) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    // Check if current user can delete this user
+    if (!canManageUserRole(req.user.role, targetUser.role)) {
+      return res.status(403).json({
+        success: false,
+        message: 'Insufficient permissions to delete this user'
+      });
+    }
 
     await prisma.user.delete({
       where: { id }

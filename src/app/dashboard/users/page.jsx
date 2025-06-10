@@ -171,11 +171,7 @@ export default function UsersPage() {
   };
 
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
+    return new Date(dateString).toLocaleDateString();
   };
 
   const filteredUsers = users.filter(u => 

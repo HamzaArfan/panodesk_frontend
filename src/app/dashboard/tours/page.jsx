@@ -167,7 +167,7 @@ function ToursContent() {
   };
 
   const userHasAccess = () => {
-    return canManageTours() || user?.role === 'ORGANIZATION_MANAGER' || user?.role === 'REVIEWER';
+    return canManageTours() && user?.role !== 'ORGANIZATION_MANAGER';
   };
 
   if (!userHasAccess()) {

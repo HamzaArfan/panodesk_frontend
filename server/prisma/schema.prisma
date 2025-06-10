@@ -7,7 +7,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = "prisma+postgres://accelerate.prisma-data.net/?api_key=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhcGlfa2V5IjoiMDFKWDA4UkI5ODAzMVpDVkJOVlJHMUg0RkciLCJ0ZW5hbnRfaWQiOiI5ODMxNDVlYmExNWFkNzczNmYxMDk2MmM1YzhjN2ZlMjY2MGVlZTRkYTYzY2QyYzZmNjZiOTlhZWYzMDBiYzcwIiwiaW50ZXJuYWxfc2VjcmV0IjoiYjMwZTJkMTItOGQwZS00MThlLTk2M2MtNjk5NWJhZjM2YjM3In0.5UJ7EhbpWUdQVA5_I661s2EUJZ6SKlkEDuczU63Mdy8"
+  url      = env("DATABASE_URL")
 }
 
 enum UserRole {

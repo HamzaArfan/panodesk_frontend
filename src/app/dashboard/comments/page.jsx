@@ -93,16 +93,13 @@ function CommentsContent() {
     setPagination(prev => ({ ...prev, page: 1 }));
   };
 
-  const openModal = (comment = null, parentComment = null) => {
+  const openModal = (comment = null) => {
+    if (!comment) return; // Only allow editing existing comments
     setEditingComment(comment);
-    setFormData(comment ? {
+    setFormData({
       content: comment.content,
       tourId: comment.tourId,
       parentId: comment.parentId || ''
-    } : {
-      content: '',
-      tourId: parentComment?.tourId || '',
-      parentId: parentComment?.id || ''
     });
     setShowModal(true);
   };
@@ -120,33 +117,19 @@ function CommentsContent() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
+    if (!editingComment) return; // Only allow editing, not creating
+    
     try {
-      let response;
-      if (editingComment) {
-        response = await commentsAPI.update(editingComment.id, formData);
-      } else {
-        // Clean up the form data before sending
-        const cleanedFormData = {
-          content: formData.content,
-          tourId: formData.tourId,
-        };
-        
-        // Only include parentId if it's not empty
-        if (formData.parentId && formData.parentId.trim() !== '') {
-          cleanedFormData.parentId = formData.parentId;
-        }
-        
-        response = await commentsAPI.create(cleanedFormData);
-      }
+      const response = await commentsAPI.update(editingComment.id, formData);
 
       if (response.data.success) {
-        toast.success(`Comment ${editingComment ? 'updated' : 'created'} successfully`);
+        toast.success('Comment updated successfully');
         closeModal();
         loadComments();
       }
     } catch (error) {
-      console.error('Error saving comment:', error);
-      toast.error(error.response?.data?.message || 'Failed to save comment');
+      console.error('Error updating comment:', error);
+      toast.error(error.response?.data?.message || 'Failed to update comment');
     }
   };
 
@@ -194,15 +177,6 @@ function CommentsContent() {
             <h1 className="text-2xl font-bold text-gray-900">Comments</h1>
             <p className="text-gray-600">View and manage tour comments</p>
           </div>
-          {canCreateComment() && (
-            <button
-              onClick={() => openModal()}
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-blue-700"
-            >
-              <Plus className="w-4 h-4" />
-              Add Comment
-            </button>
-          )}
         </div>
 
         {/* Filters */}
@@ -338,15 +312,6 @@ function CommentsContent() {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                           <div className="flex justify-end gap-2">
-                            {canCreateComment() && !comment.parentId && (
-                              <button
-                                onClick={() => openModal(null, comment)}
-                                className="text-green-600 hover:text-green-900 p-1"
-                                title="Reply"
-                              >
-                                <Reply className="w-4 h-4" />
-                              </button>
-                            )}
                             {canEditComment(comment) && (
                               <>
                                 <button
@@ -433,12 +398,12 @@ function CommentsContent() {
       </div>
 
       {/* Modal */}
-      {showModal && (
+      {showModal && editingComment && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
           <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
             <div className="mt-3">
               <h3 className="text-lg font-medium text-gray-900 mb-4">
-                {editingComment ? 'Edit Comment' : formData.parentId ? 'Reply to Comment' : 'Add Comment'}
+                Edit Comment
               </h3>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
@@ -453,27 +418,6 @@ function CommentsContent() {
                     onChange={(e) => setFormData(prev => ({ ...prev, content: e.target.value }))}
                   />
                 </div>
-                {!editingComment && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Tour *
-                    </label>
-                    <select
-                      required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      value={formData.tourId}
-                      onChange={(e) => setFormData(prev => ({ ...prev, tourId: e.target.value }))}
-                      disabled={!!formData.parentId}
-                    >
-                      <option value="">Select a tour</option>
-                      {tours.map(tour => (
-                        <option key={tour.id} value={tour.id}>
-                          {tour.name} (v{tour.version}) - {tour.project?.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                )}
                 <div className="flex justify-end gap-2 pt-4">
                   <button
                     type="button"
@@ -486,7 +430,7 @@ function CommentsContent() {
                     type="submit"
                     className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
                   >
-                    {editingComment ? 'Update' : formData.parentId ? 'Reply' : 'Add Comment'}
+                    Update
                   </button>
                 </div>
               </form>

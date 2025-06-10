@@ -6,13 +6,16 @@
     "dev": "concurrently \"npm run dev:frontend\" \"npm run dev:backend\"",
     "dev:frontend": "next dev --turbopack -p 3000",
     "dev:backend": "nodemon server/server.js",
-    "build": "next build",
+    "build": "npm run db:generate && next build",
     "start": "next start",
     "lint": "next lint",
     "db:migrate": "npx prisma migrate dev --schema=server/prisma/schema.prisma",
     "db:generate": "npx prisma generate --schema=server/prisma/schema.prisma",
     "db:studio": "npx prisma studio --schema=server/prisma/schema.prisma",
-    "db:seed": "node server/prisma/seed.js"
+    "db:seed": "node server/prisma/seed.js",
+    "db:deploy": "npx prisma migrate deploy --schema=server/prisma/schema.prisma",
+    "postinstall": "npm run db:generate",
+    "vercel-build": "npm run db:generate && npm run build"
   },
   "dependencies": {
     "@headlessui/react": "^2.1.4",

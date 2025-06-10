@@ -73,7 +73,7 @@ function OrganizationsContent() {
       const response = await usersAPI.getAll({ limit: 100 });
       if (response.data.success) {
         setManagers(response.data.data.users.filter(u => 
-          ['SUPER_ADMIN', 'SYSTEM_USER', 'ORGANIZATION_MANAGER'].includes(u.role)
+          ['ORGANIZATION_MANAGER'].includes(u.role)
         ));
       }
     } catch (error) {

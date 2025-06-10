@@ -36,7 +36,7 @@ const DashboardLayout = ({ children, activeTab = 'overview' }) => {
     ...(canManageUsers() ? [{ name: 'Users', href: '/dashboard/users', icon: Users, id: 'users' }] : []),
     ...(canManageOrganizations() ? [{ name: 'Organizations', href: '/dashboard/organizations', icon: Building2, id: 'organizations' }] : []),
     ...(canManageProjects() ? [{ name: 'Projects', href: '/dashboard/projects', icon: FolderOpen, id: 'projects' }] : []),
-    ...(canManageTours() ? [{ name: 'Tours', href: '/dashboard/tours', icon: Route, id: 'tours' }] : []),
+    ...(canManageTours() && user?.role !== 'ORGANIZATION_MANAGER' ? [{ name: 'Tours', href: '/dashboard/tours', icon: Route, id: 'tours' }] : []),
     { name: 'Comments', href: '/dashboard/comments', icon: MessageSquare, id: 'comments' },
     { name: 'Invitations', href: '/dashboard/invitations', icon: Mail, id: 'invitations' },
   ];
