@@ -1,4 +1,4 @@
-# Shabbar Project - Setup Guide
+# Panodesk Admin - Setup Guide
 
 This guide will help you set up and run the comprehensive authentication and admin system.
 
