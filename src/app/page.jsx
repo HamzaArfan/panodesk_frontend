@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../contexts/AuthContext';
 import Link from 'next/link';
+import { METADATA } from '../constants';
 
 export default function HomePage() {
   const router = useRouter();
@@ -36,7 +37,7 @@ export default function HomePage() {
           <div className="text-center">
             <h1 className="text-4xl font-bold text-gray-900 sm:text-6xl">
               Welcome to{' '}
-              <span className="text-indigo-600">PanoDesk</span>
+              <span className="text-indigo-600">{METADATA.title}</span>
             </h1>
             <p className="mt-6 text-xl text-gray-600 max-w-2xl mx-auto">
               Your secure tour review portal. Sign in to access your dashboard or create a new account to get started.

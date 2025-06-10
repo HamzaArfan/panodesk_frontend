@@ -2,11 +2,6 @@ import "./globals.css";
 import { AuthProvider } from '../contexts/AuthContext';
 import { Toaster } from 'react-hot-toast';
 
-export const metadata = {
-  title: "PanoDesk",
-  description: "Admin panel for PanoDesk",
-};
-
 export default function RootLayout({ children }) {
   return (
     <html lang="en">

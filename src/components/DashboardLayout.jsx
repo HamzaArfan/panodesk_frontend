@@ -15,9 +15,10 @@ import {
   Menu, 
   X,
   Home,
-  Shield,
   ChevronDown
 } from 'lucide-react';
+import { METADATA } from '../constants';
+import Logo from './Logo';
 
 const DashboardLayout = ({ children, activeTab = 'overview' }) => {
   const router = useRouter();
@@ -61,10 +62,10 @@ const DashboardLayout = ({ children, activeTab = 'overview' }) => {
       <div className="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0">
         <div className="flex flex-col flex-grow pt-5 bg-white shadow-lg">
           <div className="flex items-center flex-shrink-0 px-6">
-            <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center">
-              <Shield className="w-5 h-5 text-white" />
+            <div className="flex-shrink-0">
+              <Logo size={32} />
             </div>
-            <span className="ml-3 text-xl font-bold text-gray-900">Admin Panel</span>
+            <span className="ml-3 text-xl font-bold text-gray-900">{METADATA.title}</span>
           </div>
           
           <div className="mt-8 flex-grow flex flex-col">
@@ -101,10 +102,9 @@ const DashboardLayout = ({ children, activeTab = 'overview' }) => {
         <div className={`fixed inset-y-0 left-0 flex flex-col w-64 bg-white shadow-xl transform transition-transform duration-300 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
           <div className="flex items-center justify-between flex-shrink-0 px-6 py-4">
             <div className="flex items-center">
-              <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center">
-                <Shield className="w-5 h-5 text-white" />
+              <div className="flex-shrink-0">
+                <Logo size={32} />
               </div>
-              <span className="ml-3 text-xl font-bold text-gray-900">Admin Panel</span>
             </div>
             <button onClick={() => setSidebarOpen(false)} className="text-gray-400 hover:text-gray-600">
               <X className="w-6 h-6" />
@@ -153,9 +153,6 @@ const DashboardLayout = ({ children, activeTab = 'overview' }) => {
                 >
                   <Menu className="h-6 w-6" />
                 </button>
-                <h1 className="ml-4 text-lg font-semibold text-gray-900 capitalize">
-                  {activeTab === 'overview' ? 'Dashboard' : activeTab.replace('-', ' ')}
-                </h1>
               </div>
 
               <div className="flex items-center space-x-4">
