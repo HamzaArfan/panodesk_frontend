@@ -21,28 +21,21 @@ export const AuthProvider = ({ children }) => {
 
   // Check if user is authenticated on app load
   useEffect(() => {
-    // Only check auth if not on an auth page
-    if (typeof window !== 'undefined') {
-      const currentPath = window.location.pathname;
-      const authPages = ['/login', '/signup', '/forgot-password', '/reset-password', '/verify-email', '/accept-invitation'];
-      
-      if (!authPages.includes(currentPath)) {
-        checkAuth();
-      } else {
-        // On auth pages, just set loading to false without making API call
-        setLoading(false);
-      }
-    } else {
-      checkAuth();
-    }
+    checkAuth();
   }, []);
 
   const checkAuth = async () => {
     try {
       const response = await authAPI.getCurrentUser();
-      setUser(response.data.user);
-      setIsAuthenticated(true);
+      if (response.data.success) {
+        setUser(response.data.user);
+        setIsAuthenticated(true);
+      } else {
+        setUser(null);
+        setIsAuthenticated(false);
+      }
     } catch (error) {
+      console.error('Auth check failed:', error);
       setUser(null);
       setIsAuthenticated(false);
     } finally {
@@ -53,13 +46,20 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password) => {
     try {
       const response = await authAPI.login(email, password);
-      setUser(response.data.user);
-      setIsAuthenticated(true);
-      toast.success('Login successful!');
-      return { success: true, user: response.data.user };
+      if (response.data.success) {
+        const userData = response.data.user;
+        setUser(userData);
+        setIsAuthenticated(true);
+        toast.success('Login successful!');
+        return { success: true, user: userData };
+      } else {
+        throw new Error(response.data.message || 'Login failed');
+      }
     } catch (error) {
-      const message = error.response?.data?.message || 'Login failed';
+      const message = error.response?.data?.message || error.message || 'Login failed';
       toast.error(message);
+      setUser(null);
+      setIsAuthenticated(false);
       return { success: false, error: message };
     }
   };
@@ -129,12 +129,17 @@ export const AuthProvider = ({ children }) => {
   const acceptInvitation = async (token, userData) => {
     try {
       const response = await authAPI.acceptInvitation(token, userData);
-      setUser(response.data.user);
-      setIsAuthenticated(true);
-      toast.success('Invitation accepted successfully!');
-      return { success: true, user: response.data.user };
+      if (response.data.success) {
+        const user = response.data.user;
+        setUser(user);
+        setIsAuthenticated(true);
+        toast.success('Invitation accepted successfully!');
+        return { success: true, user };
+      } else {
+        throw new Error(response.data.message || 'Failed to accept invitation');
+      }
     } catch (error) {
-      const message = error.response?.data?.message || 'Failed to accept invitation';
+      const message = error.response?.data?.message || error.message || 'Failed to accept invitation';
       toast.error(message);
       return { success: false, error: message };
     }

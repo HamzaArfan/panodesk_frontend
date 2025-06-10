@@ -37,7 +37,10 @@ export default function LoginPage() {
       const result = await login(formData.email, formData.password);
       
       if (result.success) {
-        router.push(DEFAULT_AUTHENTICATED_ROUTE);
+        // Add a small delay to ensure auth state is properly set
+        setTimeout(() => {
+          router.push(DEFAULT_AUTHENTICATED_ROUTE);
+        }, 100);
       } else {
         setError(result.error);
       }
