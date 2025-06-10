@@ -3,8 +3,8 @@ import { AuthProvider } from '../contexts/AuthContext';
 import { Toaster } from 'react-hot-toast';
 
 export const metadata = {
-  title: "Shabbar Project - Authentication & Admin System",
-  description: "Comprehensive authentication and role-based admin system with RBAC",
+  title: "PanoDesk",
+  description: "Admin panel for PanoDesk",
 };
 
 export default function RootLayout({ children }) {
